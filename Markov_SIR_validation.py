@@ -12,12 +12,12 @@ import numpy as np
 
 # Only edit these parameters:
 #----------------------------------------------------
-t0 = 24 * 60 # step interval (currently 1 minute)
-recovery = 14 * t0 # recovery time (currently 14 days)
-R0 = 3 # ratio of infections to recoveries
-N = 10000 # total population
+t0 = 24 * 60 * 60 * 60 # step interval (currently 60 steps per second)
+recovery = 4 * t0 # recovery time (taken from various sources)
+R0 = 3.226 # ratio of infections to recoveries
+N = 4886000 # total population
 I0 = 10 # amount of initially infected people
-steps = 200000
+steps = 150000 * 60 * 30
 #----------------------------------------------------
 
 k = R0 / recovery # rate of infection
@@ -30,6 +30,7 @@ S_arr = [S] # arrays of S,I,R,t values for plotting
 I_arr = [I]
 R_arr = [R]
 
+t_arr = [0]
 delta_I_arr = [] # testing purposes
 delta_R_arr = []
 
@@ -54,11 +55,14 @@ for n in range(0, steps):
     S_arr.append(S) # arrays for plotting
     I_arr.append(I)
     R_arr.append(R)
+    t_arr.append(t_arr[-1] + 1 / t0)
     
-plt.plot(delta_I_arr, "g", label="chance of infection") # testing purposes
-plt.plot(delta_R_arr, "r", label="chance of recovery")
-plt.plot(np.add(delta_I_arr, delta_R_arr), "y", label="sum of both")
-plt.xlabel("time (minutes)")
+del t_arr[-1]
+    
+plt.plot(t_arr, delta_I_arr, "g", label="chance of infection") # testing purposes
+plt.plot(t_arr, delta_R_arr, "r", label="chance of recovery")
+plt.plot(t_arr, np.add(delta_I_arr, delta_R_arr), "y", label="sum of both")
+plt.xlabel("time (days)")
 plt.ylabel("probability")
 
 plt.legend()
