@@ -44,16 +44,62 @@ for n in range(0, length):
 
 delta = length * sum_x_squared - sum_x**2
 
-b = (sum_x_squared * sum_y - sum_x * sum_xy) / delta
-a = (length * sum_xy - sum_x * sum_y) / delta
+A = (sum_x_squared * sum_y - sum_x * sum_xy) / delta
+B = (length * sum_xy - sum_x * sum_y) / delta
    
 x = np.linspace(1, 29, 1000)
-y = a * x + b
+y = A + B*x
 
-print(a) # R0 = 1 + a
-print(b)
+sigma_y = 0
+for n in range(0, length):
+    sigma_y += (log_cases[n] - A - B * dates[n])**2
+
+sigma_y /= (length - 2)
+sigma_y = np.sqrt(sigma_y)
+
+sigma_A = sigma_y * np.sqrt(sum_x_squared / delta)
+sigma_B = sigma_y * np.sqrt(length / delta)
+
+print("A = ", A)
+print("B = ", B)
+print("sigma_A = ", sigma_A)
+print("sigma_B = ", sigma_B)
 
 plt.plot(dates, log_cases, "o")
 plt.plot(x, y, 'r')
 plt.xlabel("days")
 plt.ylabel("log(cases)")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

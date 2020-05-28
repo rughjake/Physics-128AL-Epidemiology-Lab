@@ -12,16 +12,16 @@ import numpy as np
 
 # Only edit these parameters:
 #----------------------------------------------------
-t0 = 24 * 60 * 60 * 60 # step interval (currently 60 steps per second)
-recovery = 4 * t0 # recovery time (taken from various sources)
-R0 = 3.226 # ratio of infections to recoveries
+t0 = 24 * 60 # step interval
+serial_interval = 4 # recovery time (taken from various sources)
+R0 = .311 * serial_interval # ratio of infections to recoveries
 N = 4886000 # total population
-I0 = 10 # amount of initially infected people
-steps = 150000 * 60 * 30
+I0 = 43 # amount of initially infected people
+steps = 150000
 #----------------------------------------------------
 
-k = R0 / recovery # rate of infection
-gamma = 1 / recovery # rate of recovery
+gamma = 1 / serial_interval / t0 # rate of recovery
+k = R0 * gamma # rate of infection
 S = N - I0 # susceptible
 I = I0 # infected
 R = 0 # recovered

@@ -16,27 +16,66 @@ import numpy as np
 
 # SIR/simulation parameters
 #----------------------------------------------------
-t0 = 24 * 60 # step interval (currently 60 steps per second)
-recovery = 4 * t0 # recovery time (~4 given by various sources)
-R0 = .308 # extracted from New Zealand's case data
+t0 = 24 * 60 # step interval (6 seconds)
+serial_interval = 4 # recovery time (~4 given by various sources)
+R0 = .311 * serial_interval # extracted from New Zealand's case data
 N = 4886000 # total population (New Zealand's population)
-I0 = 20 # amount of initially infected people
+I0 = 46 # amount of initially infected people
 steps = 100000 # amount of steps to take in each simulation
-sims = 20 # amount of simulations to average over
+sims = 100 # amount of simulations to average over
 #----------------------------------------------------
 
-# Self-isolation parameters:
+# Quarantine parameters:
 #----------------------------------------------------
-iso_start = 21 # days after start when self-isolation starts
+iso_start = 19 + 2 # days after start when self-isolation starts
 self_isolation = .10 # infection reduction after self-isolation
-partial_start = 23 # start of partial lockdown
-partial_lockdown = .15 # infection reduction after partial lockdown
-full_start = 25 # start of full lockdown
-full_lockdown = .40 # infection reduction after total lockdown
+level2_start = 21 + 2
+level2 = .20 #.15
+partial_start = 23 + 2 # start of partial lockdown
+partial_lockdown = .30 #.20 # infection reduction after partial lockdown
+full_start = 25 + 2 # start of full lockdown
+full_lockdown = .45 # infection reduction after total lockdown
 #----------------------------------------------------
 
-k = R0 / recovery # rate of infection
-gamma = 1 / recovery # rate of recovery
+file = open("total-cases-covid-19.csv", "r") # file containing NZ case data
+entries = file.readlines()
+file.close()
+data = []
+for i in entries:
+    if i[0:11] == "New Zealand":
+        data.append(i)
+
+n = 0        
+while data[n][17:20] != "Mar":
+    n += 1
+
+n -= 2
+
+dates = []
+cases = []
+while data[n][17:20] == "Feb":
+    line = data[n]
+    line = line.split(",")
+    dates.append(int(line[2][5:]) - 28)
+    cases.append(int(line[-1]))
+    n += 1
+    
+while data[n][17:20] == "Mar":
+    line = data[n]
+    line = line.split(",")
+    dates.append(int(line[2][5:]) + 1)
+    cases.append(int(line[-1]))
+    n += 1
+    
+while data[n][17:20] == "Apr":
+    line = data[n]
+    line = line.split(",")
+    dates.append(int(line[2][5:]) + 32)
+    cases.append(int(line[-1]))
+    n += 1
+
+gamma = 1 / serial_interval / t0 # rate of recovery
+k = R0 * gamma # rate of infection
 
 S_lists = []
 I_lists = []
@@ -52,11 +91,13 @@ for a in range(0, sims):
     R_arr = [R]
     t_arr = [0]
     
-    for t in range(0, steps):
+    for t in range(t0, steps + t0):
         delta_I = k * S * I / N # chance of infection
         delta_R = gamma * I # chance of recovery
-        if t >= iso_start * t0 and t < partial_start * t0:
+        if t >= iso_start * t0 and t < level2_start * t0:
             delta_I *= (1 - self_isolation)
+        elif t >= level2_start and t < partial_start:
+            delta_I *= (1 - level2)
         elif t >= partial_start * t0 and t < full_start * t0:
             delta_I *= (1 - partial_lockdown)
         elif t >= full_start * t0:
@@ -120,7 +161,8 @@ R_min = np.subtract(R_avg, R_dev)
 #plt.plot(t_arr, S_avg, "b", label="susceptible")
 #plt.plot(t_arr, I_avg, "g", label="infected")
 #plt.plot(t_arr, R_avg, "r", label="recovered")
-plt.plot(t_arr, np.add(I_avg, R_avg), "y", label="confirmed cases")
+plt.plot(t_arr, np.add(I_avg, R_avg), "y", label="simulated cases")
+plt.plot(dates, cases, "o", label="confirmed cases")
 
 #plt.fill_between(t_arr, S_max, S_min, facecolor="blue", alpha=0.5)
 #plt.fill_between(t_arr, I_max, I_min, facecolor="green", alpha=0.5)
@@ -129,5 +171,6 @@ plt.fill_between(t_arr, np.add(I_max, R_max), np.add(I_min, R_min), facecolor="y
 
 plt.xlabel("time (days)")
 plt.ylabel("cases")
+plt.title("Total COVID-19 Cases in New Zealand")
 plt.legend()
 plt.show()
